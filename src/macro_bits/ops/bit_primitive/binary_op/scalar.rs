@@ -1,13 +1,13 @@
-use crate::{MBLH, MacroBits};
+use crate::{WBLH, WideBits};
 
-impl MacroBits {
+impl WideBits {
     #[inline]
     fn binary_op_scalar_kernel<F>(lhs: &Self, rhs: &Self, scalar_op: F) -> (usize, Box<[u64]>)
     where
         F: Fn(u64, u64) -> u64,
     {
         let len = lhs.len.min(rhs.len);
-        let word_len = MBLH::required_word_len(len);
+        let word_len = WBLH::required_word_len(len);
         let mut data = Vec::with_capacity(word_len);
 
         for i in 0..word_len {
@@ -15,7 +15,7 @@ impl MacroBits {
         }
 
         let mut data = data.into_boxed_slice();
-        MBLH::sanitize_last_word(&mut data, len);
+        WBLH::sanitize_last_word(&mut data, len);
         (len, data)
     }
 
@@ -39,7 +39,7 @@ impl MacroBits {
     }
 }
 
-impl MacroBits {
+impl WideBits {
     #[inline]
     pub(super) fn and_scalar(&self, rhs: &Self) -> Self {
         self.binary_op_scalar(rhs, |x, y| x & y)

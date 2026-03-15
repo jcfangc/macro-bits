@@ -1,4 +1,4 @@
-use crate::{MBLH, MacroBits};
+use crate::{WBLH, WideBits};
 use proptest::prelude::*;
 
 #[derive(Copy, Clone, Debug)]
@@ -31,7 +31,7 @@ impl BinOp {
     }
 
     #[inline]
-    fn apply_public(self, lhs: &MacroBits, rhs: &MacroBits) -> MacroBits {
+    fn apply_public(self, lhs: &WideBits, rhs: &WideBits) -> WideBits {
         match self {
             Self::And => lhs.and(rhs),
             Self::Or => lhs.or(rhs),
@@ -41,7 +41,7 @@ impl BinOp {
     }
 
     #[inline]
-    fn apply_assign_public(self, lhs: &mut MacroBits, rhs: &MacroBits) {
+    fn apply_assign_public(self, lhs: &mut WideBits, rhs: &WideBits) {
         match self {
             Self::And => lhs.and_assign(rhs),
             Self::Or => lhs.or_assign(rhs),
@@ -51,7 +51,7 @@ impl BinOp {
     }
 
     #[inline]
-    fn apply_scalar(self, lhs: &MacroBits, rhs: &MacroBits) -> MacroBits {
+    fn apply_scalar(self, lhs: &WideBits, rhs: &WideBits) -> WideBits {
         match self {
             Self::And => lhs.and_scalar(rhs),
             Self::Or => lhs.or_scalar(rhs),
@@ -61,7 +61,7 @@ impl BinOp {
     }
 
     #[inline]
-    fn apply_assign_scalar(self, lhs: &mut MacroBits, rhs: &MacroBits) {
+    fn apply_assign_scalar(self, lhs: &mut WideBits, rhs: &WideBits) {
         match self {
             Self::And => lhs.and_assign_scalar(rhs),
             Self::Or => lhs.or_assign_scalar(rhs),
@@ -72,7 +72,7 @@ impl BinOp {
 
     #[cfg(target_arch = "x86_64")]
     #[inline]
-    unsafe fn apply_avx2(self, lhs: &MacroBits, rhs: &MacroBits) -> MacroBits {
+    unsafe fn apply_avx2(self, lhs: &WideBits, rhs: &WideBits) -> WideBits {
         match self {
             Self::And => unsafe { lhs.and_avx2(rhs) },
             Self::Or => unsafe { lhs.or_avx2(rhs) },
@@ -83,7 +83,7 @@ impl BinOp {
 
     #[cfg(target_arch = "x86_64")]
     #[inline]
-    unsafe fn apply_assign_avx2(self, lhs: &mut MacroBits, rhs: &MacroBits) {
+    unsafe fn apply_assign_avx2(self, lhs: &mut WideBits, rhs: &WideBits) {
         match self {
             Self::And => unsafe { lhs.and_assign_avx2(rhs) },
             Self::Or => unsafe { lhs.or_assign_avx2(rhs) },
@@ -105,11 +105,11 @@ fn all_ops() -> [BinOp; 4] {
 
 #[inline]
 fn boxed_words_for_len(len: usize) -> Box<[u64]> {
-    vec![0u64; MBLH::required_word_len(len)].into_boxed_slice()
+    vec![0u64; WBLH::required_word_len(len)].into_boxed_slice()
 }
 
 #[inline]
-fn macro_bits_from_bools(bits: &[bool]) -> MacroBits {
+fn macro_bits_from_bools(bits: &[bool]) -> WideBits {
     let len = bits.len();
     let mut data = boxed_words_for_len(len);
 
@@ -119,19 +119,19 @@ fn macro_bits_from_bools(bits: &[bool]) -> MacroBits {
         }
     }
 
-    MacroBits::new_unchecked(len, data)
+    WideBits::new_unchecked(len, data)
 }
 
 #[inline]
-fn bools_from_macro_bits(x: &MacroBits) -> Vec<bool> {
+fn bools_from_macro_bits(x: &WideBits) -> Vec<bool> {
     (0..x.len)
         .map(|i| ((x.data[i / 64] >> (i % 64)) & 1) != 0)
         .collect()
 }
 
 #[inline]
-fn zero_bits(len: usize) -> MacroBits {
-    MacroBits::new_unchecked(len, boxed_words_for_len(len))
+fn zero_bits(len: usize) -> WideBits {
+    WideBits::new_unchecked(len, boxed_words_for_len(len))
 }
 
 #[inline]
@@ -183,7 +183,7 @@ fn boundary_lengths() -> [usize; 7] {
 }
 
 #[inline]
-fn assert_tail_sanitized(x: &MacroBits) {
+fn assert_tail_sanitized(x: &WideBits) {
     let rem = x.len % 64;
     if rem == 0 || x.data.is_empty() {
         return;
@@ -265,11 +265,11 @@ fn tail_word_is_sanitized_in_results() {
 
     for op in all_ops() {
         for len in lens {
-            let word_len = MBLH::required_word_len(len);
+            let word_len = WBLH::required_word_len(len);
             let raw = vec![u64::MAX; word_len].into_boxed_slice();
 
-            let lhs = MacroBits::new_unchecked(len, raw.clone());
-            let rhs = MacroBits::new_unchecked(len, raw);
+            let lhs = WideBits::new_unchecked(len, raw.clone());
+            let rhs = WideBits::new_unchecked(len, raw);
 
             let out = op.apply_public(&lhs, &rhs);
             assert_tail_sanitized(&out);

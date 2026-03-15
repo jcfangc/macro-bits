@@ -1,7 +1,7 @@
-/// Macro Bits Layout Helper
-pub(crate) struct MBLH;
+/// Wide Bits Layout Helper
+pub(crate) struct WBLH;
 
-impl MBLH {
+impl WBLH {
     pub(crate) const WORD_BIT_WIDTH: usize = 64;
 
     #[inline]

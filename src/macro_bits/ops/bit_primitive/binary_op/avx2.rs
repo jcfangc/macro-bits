@@ -1,13 +1,13 @@
 #[cfg(target_arch = "x86_64")]
 use core::arch::x86_64::*;
 
-use crate::{MBLH, MacroBits};
+use crate::{WBLH, WideBits};
 
 #[cfg(target_arch = "x86_64")]
 type Avx2BinOp = unsafe fn(__m256i, __m256i) -> __m256i;
 
 #[cfg(target_arch = "x86_64")]
-impl MacroBits {
+impl WideBits {
     #[target_feature(enable = "avx2")]
     unsafe fn binary_op_avx2_words_to<F>(
         lhs: *const u64,
@@ -48,7 +48,7 @@ impl MacroBits {
         F: Fn(u64, u64) -> u64,
     {
         let len = lhs.len.min(rhs.len);
-        let word_len = MBLH::required_word_len(len);
+        let word_len = WBLH::required_word_len(len);
         let mut data = vec![0u64; word_len];
 
         unsafe {
@@ -63,7 +63,7 @@ impl MacroBits {
         }
 
         let mut data = data.into_boxed_slice();
-        MBLH::sanitize_last_word(&mut data, len);
+        WBLH::sanitize_last_word(&mut data, len);
         (len, data)
     }
 
@@ -88,7 +88,7 @@ impl MacroBits {
 }
 
 #[cfg(target_arch = "x86_64")]
-impl MacroBits {
+impl WideBits {
     #[target_feature(enable = "avx2")]
     pub(super) unsafe fn and_avx2(&self, rhs: &Self) -> Self {
         unsafe { self.binary_op_avx2(rhs, _mm256_and_si256, |x, y| x & y) }

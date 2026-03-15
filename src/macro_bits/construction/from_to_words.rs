@@ -1,9 +1,9 @@
-use crate::{MBLH, MacroBits, macro_bits::construction::ConstructionError};
+use crate::{WBLH, WideBits, macro_bits::construction::ConstructionError};
 
-impl MacroBits {
+impl WideBits {
     #[inline]
     pub fn try_from_words(words: &[u64], len: usize) -> Result<Self, ConstructionError> {
-        let required_word_len = MBLH::required_word_len(len);
+        let required_word_len = WBLH::required_word_len(len);
         if words.len() < required_word_len {
             return Err(ConstructionError::InsufficientWords {
                 required: required_word_len,
@@ -11,7 +11,7 @@ impl MacroBits {
             });
         }
         let mut data = words[..required_word_len].to_vec().into_boxed_slice();
-        MBLH::sanitize_last_word(&mut data, len);
+        WBLH::sanitize_last_word(&mut data, len);
         Ok(Self::new_unchecked(len, data))
     }
 
@@ -20,7 +20,7 @@ impl MacroBits {
         mut data: Box<[u64]>,
         len: usize,
     ) -> Result<Self, ConstructionError> {
-        let required_word_len = MBLH::required_word_len(len);
+        let required_word_len = WBLH::required_word_len(len);
         if data.len() < required_word_len {
             return Err(ConstructionError::InsufficientWords {
                 required: required_word_len,
@@ -28,7 +28,7 @@ impl MacroBits {
             });
         }
         data = data[..required_word_len].into();
-        MBLH::sanitize_last_word(&mut data, len);
+        WBLH::sanitize_last_word(&mut data, len);
         Ok(Self::new_unchecked(len, data))
     }
 }
@@ -46,7 +46,7 @@ mod from_words_tests {
         fn zero_len() {
             let words = [123u64, 456];
 
-            let b = MacroBits::try_from_words(&words, 0).unwrap();
+            let b = WideBits::try_from_words(&words, 0).unwrap();
 
             assert_eq!(b.len(), 0);
             assert!(b.data().is_empty());
@@ -56,7 +56,7 @@ mod from_words_tests {
         fn exact_word_boundary() {
             let words = [u64::MAX, u64::MAX];
 
-            let b = MacroBits::try_from_words(&words, 128).unwrap();
+            let b = WideBits::try_from_words(&words, 128).unwrap();
 
             assert_eq!(b.len(), 128);
             assert_eq!(b.data(), &words);
@@ -66,7 +66,7 @@ mod from_words_tests {
         fn tail_mask_applied() {
             let words = [u64::MAX];
 
-            let b = MacroBits::try_from_words(&words, 10).unwrap();
+            let b = WideBits::try_from_words(&words, 10).unwrap();
 
             let expected = (1u64 << 10) - 1;
 
@@ -78,7 +78,7 @@ mod from_words_tests {
         fn multi_word_tail_mask() {
             let words = [u64::MAX, u64::MAX];
 
-            let b = MacroBits::try_from_words(&words, 70).unwrap();
+            let b = WideBits::try_from_words(&words, 70).unwrap();
 
             assert_eq!(b.data()[0], u64::MAX);
 
@@ -92,7 +92,7 @@ mod from_words_tests {
         fn insufficient_words_error() {
             let words = [0u64];
 
-            let err = MacroBits::try_from_words(&words, 130).unwrap_err();
+            let err = WideBits::try_from_words(&words, 130).unwrap_err();
 
             assert_eq!(
                 err,
@@ -115,12 +115,12 @@ mod from_words_tests {
                 words in prop::collection::vec(any::<u64>(), 0..16)
             ) {
 
-                let required = MBLH::required_word_len(len);
+                let required = WBLH::required_word_len(len);
 
                 if words.len() < required {
-                    prop_assert!(MacroBits::try_from_words(&words, len).is_err());
+                    prop_assert!(WideBits::try_from_words(&words, len).is_err());
                 } else {
-                    let b = MacroBits::try_from_words(&words, len).unwrap();
+                    let b = WideBits::try_from_words(&words, len).unwrap();
                     prop_assert_eq!(b.len(), len);
                 }
             }
@@ -131,10 +131,10 @@ mod from_words_tests {
                 words in prop::collection::vec(any::<u64>(), 0..16)
             ) {
 
-                let required = MBLH::required_word_len(len);
+                let required = WBLH::required_word_len(len);
 
                 if words.len() >= required {
-                    let b = MacroBits::try_from_words(&words, len).unwrap();
+                    let b = WideBits::try_from_words(&words, len).unwrap();
 
                     prop_assert_eq!(b.data().len(), required);
                 }
@@ -146,13 +146,13 @@ mod from_words_tests {
                 words in prop::collection::vec(any::<u64>(), 1..16)
             ) {
 
-                let required = MBLH::required_word_len(len);
+                let required = WBLH::required_word_len(len);
 
                 if words.len() >= required {
 
-                    let b = MacroBits::try_from_words(&words, len).unwrap();
+                    let b = WideBits::try_from_words(&words, len).unwrap();
 
-                    let rem = len % MBLH::WORD_BIT_WIDTH;
+                    let rem = len % WBLH::WORD_BIT_WIDTH;
 
                     let last = *b.data().last().unwrap();
 
@@ -168,7 +168,7 @@ mod from_words_tests {
     }
 }
 
-impl MacroBits {
+impl WideBits {
     #[inline]
     pub fn to_words(&self) -> &[u64] {
         &self.data

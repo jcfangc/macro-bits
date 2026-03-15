@@ -1,9 +1,9 @@
-use crate::{MBLH, macro_bits::MacroBits};
+use crate::{WBLH, macro_bits::WideBits};
 
-impl MacroBits {
+impl WideBits {
     #[inline]
     pub fn zeros(len: usize) -> Self {
-        let word_len = len.div_ceil(MBLH::WORD_BIT_WIDTH);
+        let word_len = len.div_ceil(WBLH::WORD_BIT_WIDTH);
         let data = vec![0; word_len].into_boxed_slice();
 
         Self::new_unchecked(len, data)
@@ -21,7 +21,7 @@ mod zeros_tests {
 
         #[test]
         fn zero_len() {
-            let b = MacroBits::zeros(0);
+            let b = WideBits::zeros(0);
 
             assert_eq!(b.len(), 0);
             assert!(b.data().is_empty());
@@ -32,11 +32,11 @@ mod zeros_tests {
             let cases = [1, 2, 3, 7, 8, 31, 32, 63, 64, 65, 127];
 
             for len in cases {
-                let b = MacroBits::zeros(len);
+                let b = WideBits::zeros(len);
 
                 assert_eq!(b.len(), len);
 
-                let expected = len.div_ceil(MBLH::WORD_BIT_WIDTH);
+                let expected = len.div_ceil(WBLH::WORD_BIT_WIDTH);
                 assert_eq!(b.data().len(), expected);
 
                 assert!(b.data().iter().all(|&x| x == 0));
@@ -45,7 +45,7 @@ mod zeros_tests {
 
         #[test]
         fn word_boundary() {
-            let b = MacroBits::zeros(64);
+            let b = WideBits::zeros(64);
 
             assert_eq!(b.data().len(), 1);
             assert_eq!(b.data()[0], 0);
@@ -53,7 +53,7 @@ mod zeros_tests {
 
         #[test]
         fn multi_word() {
-            let b = MacroBits::zeros(130);
+            let b = WideBits::zeros(130);
 
             assert_eq!(b.data().len(), 3);
             assert!(b.data().iter().all(|&x| x == 0));
@@ -76,7 +76,7 @@ mod zeros_tests {
                 Just(127),
                 0usize..512
             ]) {
-                let b = MacroBits::zeros(len);
+                let b = WideBits::zeros(len);
 
                 prop_assert_eq!(b.len(), len);
 
@@ -96,9 +96,9 @@ mod zeros_tests {
                 Just(127),
                 0usize..512
             ]) {
-                let b = MacroBits::zeros(len);
+                let b = WideBits::zeros(len);
 
-                let expected = len.div_ceil(MBLH::WORD_BIT_WIDTH);
+                let expected = len.div_ceil(WBLH::WORD_BIT_WIDTH);
 
                 prop_assert_eq!(b.data().len(), expected);
             }

@@ -1,10 +1,10 @@
-use crate::{MBLH, macro_bits::MacroBits};
+use crate::{WBLH, macro_bits::WideBits};
 
-impl MacroBits {
+impl WideBits {
     #[inline]
     pub fn ones(len: usize) -> Self {
-        let mut data = vec![u64::MAX; MBLH::required_word_len(len)];
-        MBLH::sanitize_last_word(&mut data, len);
+        let mut data = vec![u64::MAX; WBLH::required_word_len(len)];
+        WBLH::sanitize_last_word(&mut data, len);
         Self::new_unchecked(len, data.into_boxed_slice())
     }
 }
@@ -20,7 +20,7 @@ mod ones_tests {
 
         #[test]
         fn zero_len() {
-            let b = MacroBits::ones(0);
+            let b = WideBits::ones(0);
 
             assert_eq!(b.len(), 0);
             assert!(b.data().is_empty());
@@ -31,18 +31,18 @@ mod ones_tests {
             let cases = [1, 2, 3, 7, 8, 31, 32, 63, 64, 65, 127];
 
             for len in cases {
-                let b = MacroBits::ones(len);
+                let b = WideBits::ones(len);
 
                 assert_eq!(b.len(), len);
 
-                let expected = len.div_ceil(MBLH::WORD_BIT_WIDTH);
+                let expected = len.div_ceil(WBLH::WORD_BIT_WIDTH);
                 assert_eq!(b.data().len(), expected);
             }
         }
 
         #[test]
         fn word_boundary() {
-            let b = MacroBits::ones(64);
+            let b = WideBits::ones(64);
 
             assert_eq!(b.data().len(), 1);
             assert_eq!(b.data()[0], u64::MAX);
@@ -50,7 +50,7 @@ mod ones_tests {
 
         #[test]
         fn tail_mask() {
-            let b = MacroBits::ones(10);
+            let b = WideBits::ones(10);
 
             assert_eq!(b.data().len(), 1);
 
@@ -60,7 +60,7 @@ mod ones_tests {
 
         #[test]
         fn multi_word() {
-            let b = MacroBits::ones(130);
+            let b = WideBits::ones(130);
 
             assert_eq!(b.data().len(), 3);
 
@@ -90,9 +90,9 @@ mod ones_tests {
                 Just(127),
                 0usize..256
             ]) {
-                let b = MacroBits::ones(len);
+                let b = WideBits::ones(len);
 
-                let expected = len.div_ceil(MBLH::WORD_BIT_WIDTH);
+                let expected = len.div_ceil(WBLH::WORD_BIT_WIDTH);
 
                 prop_assert_eq!(b.data().len(), expected);
             }
@@ -108,14 +108,14 @@ mod ones_tests {
                 Just(127),
                 0usize..256
             ]) {
-                let b = MacroBits::ones(len);
+                let b = WideBits::ones(len);
 
                 if len == 0 {
                     prop_assert!(b.data().is_empty());
                     return Ok(());
                 }
 
-                let rem = len % MBLH::WORD_BIT_WIDTH;
+                let rem = len % WBLH::WORD_BIT_WIDTH;
 
                 let last = *b.data().last().unwrap();
 

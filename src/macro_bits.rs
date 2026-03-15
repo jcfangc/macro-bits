@@ -2,13 +2,13 @@ mod construction;
 mod ops;
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
-pub struct MacroBits {
+pub struct WideBits {
     len: usize,       // 比特长度
     data: Box<[u64]>, // 真正存储比特的堆内存
 }
 
 // basic accessors
-impl MacroBits {
+impl WideBits {
     #[inline]
     pub(crate) const fn new_unchecked(len: usize, data: Box<[u64]>) -> Self {
         Self { len, data }

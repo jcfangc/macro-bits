@@ -1,9 +1,9 @@
-use crate::MacroBits;
+use crate::WideBits;
 
 mod extend;
 mod truncate;
 
-impl MacroBits {
+impl WideBits {
     #[inline]
     pub fn resize(&mut self, new_len: usize) {
         if new_len > self.len {

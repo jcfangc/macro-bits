@@ -1,11 +1,11 @@
 [package]
-name = "macro-bits"
+name = "widebits"
 version = "0.0.1"
 edition = "2024"
 rust-version = "1.85"
 description = "An experimental bit sequence library with bitwise operations and SIMD acceleration."
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/jcfangc/macro-bits"
+repository = "https://github.com/jcfangc/widebits"
 readme = "README.md"
 keywords = ["bitset", "bits", "bitwise", "simd", "bitmap"]
 categories = ["data-structures", "algorithms"]

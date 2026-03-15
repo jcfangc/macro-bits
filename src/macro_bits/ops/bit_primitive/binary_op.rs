@@ -4,9 +4,9 @@ mod binary_op_tests;
 mod avx2;
 mod scalar;
 
-use crate::MacroBits;
+use crate::WideBits;
 
-impl MacroBits {
+impl WideBits {
     #[inline]
     pub fn and(&self, rhs: &Self) -> Self {
         #[cfg(target_arch = "x86_64")]
