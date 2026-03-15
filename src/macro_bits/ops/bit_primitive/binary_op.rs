@@ -1,6 +1,7 @@
-mod avx2;
 #[cfg(test)]
 mod binary_op_tests;
+
+mod avx2;
 mod scalar;
 
 use crate::MacroBits;
